@@ -28,6 +28,7 @@ There are two different ways that this project can be used:
 
 #### Automatically
 
+There are two triggers for the pipeline to run:
 - To run the workflow manually you go to the actions page [HERE](https://github.com/mitre/ubi8-hardening-demo/actions/workflows/main.yml) and press the `Run workflow` button.
 - The workflow will also run everytime a new commit is pushed to the main branch.
 
