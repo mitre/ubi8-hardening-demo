@@ -12,6 +12,7 @@ A sample workflow for hardening a UBI8 container against a STIG using Packer and
 - Progress Chef's [InSpec](https://docs.chef.io/inspec/) testing framework.
 - MITRE SAF(c)'s InSpec profile for the [RHEL8 STIG](https://github.com/mitre/redhat-enterprise-linux-8-stig-baseline) for testing the results of the hardening process.
 - [SAF CLI](https://saf-cli.mitre.org) for validating the results of the InSpec scan against a defined threshold (e.g. "95% of tests pass", or "no high-severity failures")
+- [jmespath](https://pypi.org/project/jmespath/) - this is a python package that is a dependency for the RHEL8 STIG-hardening ansible playbook. It can be installed using `pip install jmespath` or `python3 -m pip install jmespath`
 
 ### Usage
 
