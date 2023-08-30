@@ -10,8 +10,9 @@ then
         -F "filename=$f" \
         -F 'public=false' \
         -H "Authorization: Api-Key $API_KEY" \
-        "https://localhost/evaluations" \
+        "https://$HOSTNAME/evaluations" \
         -k
+        exit $?
     done
 else
     exit 0

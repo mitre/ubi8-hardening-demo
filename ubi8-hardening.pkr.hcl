@@ -33,7 +33,16 @@ variable "input_image" {
 variable "output_image" {
   type = map(string)
   default = {
-    "name"    = "test-harden"
+    "name"      = "test-harden"
+    "tag"       = "passed"
+  }
+}
+
+variable "post_processing"{
+  type = map(string)
+  default = {
+    "docker_registry"   = "localhost:5000",
+    "push_to_registry"  = true
   }
 }
 
@@ -50,7 +59,9 @@ variable "scan" {
 variable "report" {
   type = map(string)
   default = {
-    "report_to_heimdall"     = true
+    "report_to_heimdall"  = true,
+    "hostname"            = "localhost",
+    "heimdall_api_key"    = "****"
   }
 }
 
@@ -75,16 +86,16 @@ build {
     ]
   }
 
-  provisioner "ansible" {
-    playbook_file = "spec/ansible/rhel8-stig-hardening-playbook.yml"
-    galaxy_file   = "spec/ansible/requirements.yml"
-    extra_arguments = [ 
-      "--extra-vars", "ansible_host=${var.output_image.name}",
-      "--extra-vars", "ansible_connection=${var.ansible_vars.ansible_connection}",
-      "--extra-vars", "ansible_python_interpreter=/usr/bin/python3",
-      "--extra-vars", "ansible_pip_executable=pip3"
-    ]
-  }
+  # provisioner "ansible" {
+  #   playbook_file = "spec/ansible/rhel8-stig-hardening-playbook.yml"
+  #   galaxy_file   = "spec/ansible/requirements.yml"
+  #   extra_arguments = [ 
+  #     "--extra-vars", "ansible_host=${var.output_image.name}",
+  #     "--extra-vars", "ansible_connection=${var.ansible_vars.ansible_connection}",
+  #     "--extra-vars", "ansible_python_interpreter=/usr/bin/python3",
+  #     "--extra-vars", "ansible_pip_executable=pip3"
+  #   ]
+  # }
 
   ### SCAN
   # use raw bash script to invoke scanning tools that don't have their own plugin
@@ -107,7 +118,8 @@ build {
     environment_vars = [
       "REPORT_DIR=${var.scan.report_dir}",
       "REPORT_TO_HEIMDALL=${var.report.report_to_heimdall}",
-      "API_KEY=****"
+      "API_KEY=${var.report.heimdall_api_key}",
+      "HOSTNAME=${var.report.hostname}"
     ]
     scripts          = ["spec/scripts/report.sh"]
   }
@@ -115,17 +127,22 @@ build {
   ### VERIFY
   provisioner "shell-local" {
     environment_vars = [
+      "DOCKER_REGISTRY=${var.post_processing.docker_registry}",
       "TARGET_IMAGE=${var.output_image.name}",
       "REPORT_DIR=${var.scan.report_dir}"
     ]
     valid_exit_codes = [0, 1] # the threshold checks return 1 if the thresholds aren't met
                               # this does not mean we want to halt the run 
-    scripts          = ["spec/scripts/verify_threshold.sh"]
+    scripts   = ["spec/scripts/verify_threshold.sh"]
   }
 
-  ### TAG
-  post-processor "docker-tag" {
-    repository = "${var.output_image.name}"
-    tags = ["latest"]
+  ### POST_PROCESSING
+  provisioner "shell-local" {
+    environment_vars = [
+      "DOCKER_REGISTRY=${var.post_processing.docker_registry}",
+      "PUSH_TO_REGISTRY=${var.post_processing.push_to_registry}",
+      "TARGET_IMAGE=${var.output_image.name}"
+    ]
+    scripts   = ["spec/scripts/post_processing.sh"]
   }
 }

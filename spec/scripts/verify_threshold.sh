@@ -12,7 +12,7 @@ saf validate threshold -F trivy.threshold.yml -i "$REPORT_DIR/inspec_results.jso
 TRIVY_THRESHOLD_CHECK=$?
 
 if  [ $INSPEC_THRESHOLD_CHECK -eq 0 ] && [ $TRIVY_THRESHOLD_CHECK -eq 0 ]; then
-    docker tag $TARGET_IMAGE:testing $TARGET_IMAGE:passed
+    docker tag $TARGET_IMAGE:testing $DOCKER_REGISTRY/$TARGET_IMAGE:passed
     docker image rm $TARGET_IMAGE:testing
     exit 0
 else
